@@ -60,8 +60,9 @@ def build_message_list(creds: Credentials) -> None:
     JSON Format:
         {
             "messageId": {
-                "From": "",
-                "Title: ""
+                "From": [str],
+                "Title": [str],
+                "Timestamp": [int]
             }
         }
 
@@ -103,7 +104,7 @@ def build_message_list(creds: Credentials) -> None:
         seen_ids |= new_ids
 
         for message in results.get("messages"):
-            message_json[message["id"]] = {"From": "", "Title": ""}
+            message_json[message["id"]] = {"From": "", "Title": "", "Timestamp": 0}
 
         with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
             json.dump(message_json, outfile)
