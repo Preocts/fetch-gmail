@@ -1,4 +1,7 @@
+# Google files
 credentials.json
+token.json
+
 temp_*
 .env
 venv/
