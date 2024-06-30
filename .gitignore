@@ -2,6 +2,9 @@
 credentials.json
 token.json
 
+# Project Files
+message_list.json
+
 temp_*
 .env
 venv/
