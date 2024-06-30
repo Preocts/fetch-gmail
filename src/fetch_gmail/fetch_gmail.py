@@ -165,6 +165,11 @@ def hydrate_message_list(creds: Credentials, *, save_batch_size: int = 50) -> No
 
         time.sleep(POLITENESS_SLEEP)
 
+    print("Writing messages to file...")
+    with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
+        json.dump(message_json, outfile)
+    save_count = 0
+
 
 def main() -> int:
     """Main entry point."""
