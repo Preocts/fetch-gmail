@@ -1,0 +1,15 @@
+credentials.json
+temp_*
+.env
+venv/
+*egg-info/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/
+build/
+dist/
+__pycache__/
+.vscode/
