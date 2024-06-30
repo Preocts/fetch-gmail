@@ -14,7 +14,7 @@ from googleapiclient.discovery import build
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
 
 MESSAGE_LIST_FILE = "message_list.json"
-POLITENESS_SLEEP = 2
+POLITENESS_SLEEP = 0.25
 
 
 def authenticate() -> Credentials:
@@ -116,10 +116,70 @@ def build_message_list(creds: Credentials) -> None:
         time.sleep(POLITENESS_SLEEP)
 
 
+def hydrate_message_list(creds: Credentials, *, save_batch_size: int = 50) -> None:
+    """
+    Get details of any message id that has not already been fetched.
+
+    Args:
+        creds: Authentication Credentials
+        save_batch_size: How many messages to hydrate before writing to disk
+    """
+    service = build("gmail", "v1", credentials=creds)
+    message_json: dict[str, Any] = {}
+
+    if not os.path.exists(MESSAGE_LIST_FILE):
+        raise FileNotFoundError(f"Missing {MESSAGE_LIST_FILE} file.")
+
+    print("Loading existing ids from file...")
+    with open(MESSAGE_LIST_FILE, "r", encoding="utf-8") as infile:
+        message_json = json.load(infile)
+
+    save_count = 0
+    for idx, (messageid, details) in enumerate(message_json.items(), start=1):
+        if details.get("Timestamp", 0):
+            continue
+
+        print(f"Hydrating message {idx} of {len(message_json)}.")
+
+        results = (
+            service.users()
+            .messages()
+            .get(
+                userId="me",
+                id=messageid,
+                format="metadata",
+                metadataHeaders=["From", "Subject", "Delivered-To"],
+            )
+            .execute()
+        )
+
+        message_json[messageid]["Timestamp"] = int(results["internalDate"]) // 1000
+        for header in results["payload"]["headers"]:
+            if header["name"] == "From":
+                message_json[messageid]["From"] = header["value"]
+
+            if header["name"] == "Subject":
+                message_json[messageid]["Subject"] = header["value"]
+
+            if header["name"] == "Delivered-To":
+                message_json[messageid]["Delivered-To"] = header["value"]
+
+        save_count += 1
+
+        if save_count >= save_batch_size:
+            print("Writing messages to file...")
+            with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
+                json.dump(message_json, outfile)
+            save_count = 0
+
+        time.sleep(POLITENESS_SLEEP)
+
+
 def main() -> int:
     """Main entry point."""
     creds = authenticate()
     build_message_list(creds)
+    hydrate_message_list(creds)
 
     return 0
 
