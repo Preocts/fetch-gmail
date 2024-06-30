@@ -4,12 +4,61 @@
 
 # fetch-gmail
 
+Fetch all available messages from a Gmail account. Output file is JSON objects
+by `messageId`. After hydration, each object contains the following keys:
+
+- Subject: Subject of the message
+- From: Sender of the message
+- Delivered-To: Reciever of the message
+- Timestamp: `internalDate` converted to seconds
+
+Collection of `messageId`s is designed to stop collection the moment a request
+returns ids that already exist in the `message_list.json` file. This saves time
+and API calls. Results are returned by `internalDate` decending so new messages
+are always returned first.
+
 ## Setup
 
-### Required OAuth credentials
+### Required OAuth scope
 
 - `https://www.googleapis.com/auth/gmail.readonly`
 
+### Credentials
+
+- OAuth Client, Desktop App
+
+Save the credentials as `credentials.json` in the project root directory.
+
+### Create a venv
+
+```bash
+# Windows
+py -m venv venv
+
+# Linux/Mac
+python3 -m venv venv
+```
+### Activate venv
+
+```bash
+# Windows
+venv/Scripts/activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+### Install
+
+```bash
+python -m pip install --editable .
+```
+
+### Run
+
+```bash
+python -m fetch_gmail.fetch_gmail
+```
 
 ---
 
