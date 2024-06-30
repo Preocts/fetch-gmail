@@ -57,15 +57,6 @@ def build_message_list(creds: Credentials) -> None:
 
     Note: Delete the `message_list.json` file to force a full refresh of all messges.
 
-    JSON Format:
-        {
-            "messageId": {
-                "From": [str],
-                "Title": [str],
-                "Timestamp": [int]
-            }
-        }
-
     Args:
         creds: Authentication Credentials
     """
@@ -104,7 +95,7 @@ def build_message_list(creds: Credentials) -> None:
         seen_ids |= new_ids
 
         for message in results.get("messages"):
-            message_json[message["id"]] = {"From": "", "Title": "", "Timestamp": 0}
+            message_json[message["id"]] = {}
 
         with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
             json.dump(message_json, outfile)
