@@ -12,6 +12,8 @@ from googleapiclient.discovery import build  # type: ignore
 from .messagestore import MessageStore
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+DATABASE_NAME = "messages.sqlite3"
+OUTPUT_NAME = "messages.csv"
 
 
 def authenticate() -> Credentials:
@@ -172,6 +174,18 @@ def parse_args(args: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Force a full scan of all available messages. Default stops after no new messages are found.",
     )
+    parser.add_argument(
+        "--database",
+        action="store",
+        metavar="",
+        help="Overwrite default database file name (messages.sqlite3)",
+    )
+    parser.add_argument(
+        "--output",
+        action="store",
+        metavar="",
+        help="Overwrite default export file name (messages.csv)",
+    )
 
     return parser.parse_args()
 
@@ -180,11 +194,17 @@ def main() -> int:
     """Main entry point."""
     args = parse_args()
 
-    store = MessageStore()
+    store = MessageStore(args.database or DATABASE_NAME)
     store.init_file()
 
     if args.export:
-        store.csv_export("messages.csv")
+        if os.path.exists(args.output or OUTPUT_NAME):
+            if (
+                input(f"{args.output or OUTPUT_NAME} exists, overright? (y/N)").lower()
+                != "y"
+            ):
+                return 0
+        store.csv_export(args.output or OUTPUT_NAME, allow_overwrite=True)
         return 0
 
     creds = authenticate()
