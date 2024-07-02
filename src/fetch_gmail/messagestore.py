@@ -87,10 +87,20 @@ class MessageStore:
 
         return bool(results)
 
-    def row_count(self) -> int:
-        """Returns the total number of rows in the table."""
+    def row_count(self, *, only_empty: bool = False) -> int:
+        """
+        Returns the total number of rows in the table.
+
+        Args:
+            only_empty: When True only rows needing hydration will be counted
+        """
+        if only_empty:
+            sql = "SELECT COUNT(*) FROM messages WHERE timestamp=0"
+        else:
+            sql = "SELECT COUNT(*) FROM messages"
+
         with self._get_cursor() as cursor:
-            result = cursor.execute("SELECT COUNT(*) FROM messages").fetchone()
+            result = cursor.execute(sql).fetchone()
 
         return result["COUNT(*)"]
 
