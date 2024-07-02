@@ -87,6 +87,13 @@ class MessageStore:
 
         return bool(results)
 
+    def row_count(self) -> int:
+        """Returns the total number of rows in the table."""
+        with self._get_cursor() as cursor:
+            result = cursor.execute("SELECT COUNT(*) FROM messages").fetchone()
+
+        return result["COUNT(*)"]
+
     @contextlib.contextmanager
     def _get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
         """
