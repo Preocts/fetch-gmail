@@ -7,9 +7,10 @@
 
 # fetch-gmail
 
-Fetch all available messages from a Gmail account. Output file is JSON objects
-by `messageId`. After hydration, each object contains the following keys:
+Fetch all available messages from a Gmail account. Output file is sqlite3
+database which, after full hyndration, contains the following per row:
 
+- messageId: Unique message id
 - Subject: Subject of the message
 - From: Sender of the message
 - Delivered-To: Reciever of the message
@@ -19,6 +20,8 @@ Collection of `messageId`s is designed to stop collection the moment a request
 returns ids that already exist in the `message_list.json` file. This saves time
 and API calls. Results are returned by `internalDate` decending so new messages
 are always returned first.
+
+CLI allows for easy export of the table to csv.
 
 ## Setup
 
@@ -60,7 +63,21 @@ python -m pip install --editable .
 ### Run
 
 ```bash
-python -m fetch_gmail.fetch_gmail
+fetch-gmail
+```
+
+### CLI
+
+```bash
+usage: fetch-gmail [-h] [--export] [--delay] [--fullscan] [--database] [--output]
+
+options:
+  -h, --help   show this help message and exit
+  --export     Export data as csv
+  --delay      Seconds delay between each request. Default: 0.25 seconds
+  --fullscan   Force a full scan of all available messages. Default stops after no new messages are found.
+  --database   Overwrite default database file name (messages.sqlite3)
+  --output     Overwrite default export file name (messages.csv)
 ```
 
 ---

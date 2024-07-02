@@ -1,14 +1,12 @@
 [build-system]
-requires = [
-    "setuptools",
-]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fetch-gmail"
 version = "0.1.0"
 requires-python = ">=3.11"
-description = "Download gmail emails"
+description = "Download gmail email details. Captures timestamp, from, delivered-to, and subject."
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
@@ -41,28 +39,11 @@ test = { file = [
         "requirements/requirements-test.txt",
     ] }
 
-# Alertative way to specify dependencies
-# dependencies = []
-
-# [project.optional-dependencies]
-# dev = []
-# test = []
-
 [project.urls]
 homepage = "https://github.com/Preocts/fetch-gmail"
-# documentation = ""
-# repository = ""
-# changelog = ""
 
-# CLI scripts if needed
-# [project.scripts]
-# python-src-example = "fetch_gmail.sample:main"
-
-# [tool.setuptools.packages.find]
-# where = ["src"]  # ["."] by default
-# include = ["*"]  # ["*"] by default
-# exclude = ["tests"]  # empty by default
-# namespaces = true  # true by default
+[project.scripts]
+fetch-gmail = "fetch_gmail.fetch_gmail:main"
 
 [tool.setuptools.package-data]
 "fetch_gmail" = [
