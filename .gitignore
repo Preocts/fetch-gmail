@@ -4,6 +4,7 @@ token.json
 
 # Project Files
 messages.sqlite3*
+messages.csv
 
 temp_*
 .env
