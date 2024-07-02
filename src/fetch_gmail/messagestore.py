@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import contextlib
+import csv
+import os
 import sqlite3
 from collections.abc import Generator
 from collections.abc import Iterable
@@ -115,6 +117,40 @@ class MessageStore:
                 if not row:
                     break
                 yield row["message_id"]
+
+    def csv_export(self, filename: str) -> None:
+        """
+        Export MessageStore as a csv with headers.
+
+        Args:
+            filename: Full filename and path to save export to
+
+        Raises:
+            FileExistsError: When filename already exists
+        """
+        if os.path.exists(filename):
+            raise FileExistsError(f"'{filename}' already exists!")
+
+        sql = "SELECT * FROM messages"
+        csvwriter = None
+        with self._get_cursor() as cursor:
+            results = cursor.execute(sql)
+            with open(filename, "w", encoding="utf-8") as outfile:
+
+                while "Mary had a little lamb":
+                    row = results.fetchone()
+                    if not row:
+                        break
+                    if not csvwriter:
+                        fieldnames = list(row.keys())
+                        csvwriter = csv.DictWriter(
+                            outfile,
+                            fieldnames=fieldnames,
+                            lineterminator="\n",
+                        )
+                        csvwriter.writeheader()
+
+                    csvwriter.writerow({k: row[k] for k in row.keys()})
 
     @contextlib.contextmanager
     def _get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
