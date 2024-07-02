@@ -1,17 +1,16 @@
 from __future__ import annotations
 
-import json
 import os.path
 import time
-from typing import Any
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
+from .messagestore import MessageStore
+
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-MESSAGE_LIST_FILE = "message_list.json"
 
 
 def authenticate() -> Credentials:
@@ -48,7 +47,12 @@ def authenticate() -> Credentials:
     return creds
 
 
-def build_message_list(creds: Credentials, *, delay: float = 0.25) -> None:
+def build_message_list(
+    creds: Credentials,
+    store: MessageStore,
+    *,
+    delay: float = 0.25,
+) -> None:
     """
     Builds a `message_list.json` file which contains data for all messages.
 
@@ -56,21 +60,14 @@ def build_message_list(creds: Credentials, *, delay: float = 0.25) -> None:
 
     Args:
         creds: Authentication Credentials
+        store: MessageStore object
+        delay: Number of seconds to pause between request
     """
-    seen_ids: set[str] = set()
-    message_json: dict[str, Any] = {}
-
-    if os.path.exists(MESSAGE_LIST_FILE):
-        print("Loading existing ids from file...")
-        with open(MESSAGE_LIST_FILE, "r", encoding="utf-8") as infile:
-            message_json = json.load(infile)
-        seen_ids = set(message_json.keys())
-
     service = build("gmail", "v1", credentials=creds)
 
     next_page_token = ""
     while "The Wild Things dance":
-        print(f"Fetching message ids. {len(message_json)} found so far...")
+        print(f"Fetching message ids. {store.row_count()} found so far...")
         results = (
             service.users()
             .messages()
@@ -85,17 +82,11 @@ def build_message_list(creds: Credentials, *, delay: float = 0.25) -> None:
 
         new_ids: set[str] = {message["id"] for message in results.get("messages", [])}
 
-        if not new_ids.difference(seen_ids):
+        if not store.has_unique_ids(new_ids):
             print("All ids accounted for, assuming we have all ids and stopping.")
             break
 
-        seen_ids |= new_ids
-
-        for message in results.get("messages"):
-            message_json[message["id"]] = {}
-
-        with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
-            json.dump(message_json, outfile)
+        store.save_message_ids(new_ids)
 
         if not next_page_token:
             print("All ids captured")
@@ -106,8 +97,8 @@ def build_message_list(creds: Credentials, *, delay: float = 0.25) -> None:
 
 def hydrate_message_list(
     creds: Credentials,
+    store: MessageStore,
     *,
-    save_batch_size: int = 50,
     delay: float = 0.25,
 ) -> None:
     """
@@ -115,24 +106,14 @@ def hydrate_message_list(
 
     Args:
         creds: Authentication Credentials
-        save_batch_size: How many messages to hydrate before writing to disk
+        store: MessageStore object
+        delay: Number of seconds to pause between request
     """
     service = build("gmail", "v1", credentials=creds)
-    message_json: dict[str, Any] = {}
 
-    if not os.path.exists(MESSAGE_LIST_FILE):
-        raise FileNotFoundError(f"Missing {MESSAGE_LIST_FILE} file.")
-
-    print("Loading existing ids from file...")
-    with open(MESSAGE_LIST_FILE, "r", encoding="utf-8") as infile:
-        message_json = json.load(infile)
-
-    save_count = 0
-    for idx, (messageid, details) in enumerate(message_json.items(), start=1):
-        if details.get("Timestamp", 0):
-            continue
-
-        print(f"Hydrating message {idx} of {len(message_json)}.")
+    to_fetch = store.row_count(only_empty=True)
+    for idx, messageid in enumerate(store.get_emtpy_message_ids(), start=1):
+        print(f"Hydrating message {idx} of {to_fetch}.")
 
         results = (
             service.users()
@@ -146,38 +127,35 @@ def hydrate_message_list(
             .execute()
         )
 
-        message_json[messageid]["Timestamp"] = int(results["internalDate"]) // 1000
+        message_data = {"Timestamp": results["internalDate"]}
         for header in results["payload"]["headers"]:
             if header["name"] == "From":
-                message_json[messageid]["From"] = header["value"]
+                message_data["From"] = header["value"]
 
             if header["name"] == "Subject":
-                message_json[messageid]["Subject"] = header["value"]
+                message_data["Subject"] = header["value"]
 
             if header["name"] == "Delivered-To":
-                message_json[messageid]["Delivered-To"] = header["value"]
+                message_data["Delivered-To"] = header["value"]
 
-        save_count += 1
-
-        if save_count >= save_batch_size:
-            print("Writing messages to file...")
-            with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
-                json.dump(message_json, outfile)
-            save_count = 0
+        store.update(
+            message_id=messageid,
+            from_=message_data.get("From", ""),
+            delivered_to=message_data.get("Delivered-To", ""),
+            subject=message_data.get("Subject", ""),
+            timestamp=message_data.get("Timestamp", "0"),
+        )
 
         time.sleep(delay)
-
-    print("Writing messages to file...")
-    with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
-        json.dump(message_json, outfile)
-    save_count = 0
 
 
 def main() -> int:
     """Main entry point."""
+    store = MessageStore()
+    store.init_file()
     creds = authenticate()
-    build_message_list(creds)
-    hydrate_message_list(creds)
+    build_message_list(creds, store)
+    hydrate_message_list(creds, store)
 
     return 0
 
