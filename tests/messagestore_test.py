@@ -40,7 +40,7 @@ def test_save_messages_ignores_constraint_violations(store: MessageStore) -> Non
     conn = sqlite3.connect(store.filename)
 
     store.save_message_ids(ids)
-    results = conn.execute(sql).fetchall()
+    store.save_message_ids(ids)
     results = conn.execute(sql).fetchall()
 
     assert ids == [r[0] for r in results]

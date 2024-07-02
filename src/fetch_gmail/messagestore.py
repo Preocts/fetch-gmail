@@ -40,7 +40,7 @@ class MessageStore:
         Args:
             ids: Iterable of message ids
         """
-        sql = "INSERT INTO messages (message_id) VALUES (?)"
+        sql = "INSERT OR IGNORE INTO messages (message_id) VALUES (?)"
 
         with self._get_cursor() as cursor:
             cursor.executemany(sql, ((id_,) for id_ in ids))
