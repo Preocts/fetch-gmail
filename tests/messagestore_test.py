@@ -113,3 +113,26 @@ def test_get_empty_mesages_ids(store: MessageStore) -> None:
         assert id_ in ids
 
     assert idx == len(ids)
+
+
+def test_csv_export(store: MessageStore, tmpdir) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+    tempfile = tmpdir.join("messagestore_test_export")
+    expected = """\
+message_id,from,delivered_to,subject,timestamp
+123,,,,0
+456,,,,0
+789,,,,0
+"""
+
+    try:
+        store.csv_export(tempfile)
+
+        with open(tempfile, "r", encoding="utf-8") as infile:
+            contents = infile.read()
+
+        assert contents == expected
+
+    finally:
+        os.remove(tempfile)
