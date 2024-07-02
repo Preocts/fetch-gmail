@@ -95,6 +95,16 @@ def test_row_count(store: MessageStore) -> None:
     assert result == len(ids)
 
 
+def test_row_count_only_empty(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+    store.update("123", "m", "m", "m", "1")
+
+    result = store.row_count(only_empty=True)
+
+    assert result == len(ids) - 1
+
+
 def test_get_empty_mesages_ids(store: MessageStore) -> None:
     ids = ["123", "456", "789"]
     store.save_message_ids(ids)
