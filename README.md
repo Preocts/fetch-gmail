@@ -2,6 +2,9 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Preocts/fetch-gmail/main.svg)](https://results.pre-commit.ci/latest/github/Preocts/fetch-gmail/main)
+[![Python tests](https://github.com/Preocts/fetch-gmail/actions/workflows/python-tests.yml/badge.svg?branch=main)](https://github.com/Preocts/fetch-gmail/actions/workflows/python-tests.yml)
+
 # fetch-gmail
 
 Fetch all available messages from a Gmail account. Output file is JSON objects
