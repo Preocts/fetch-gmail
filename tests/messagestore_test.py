@@ -93,3 +93,13 @@ def test_row_count(store: MessageStore) -> None:
     result = store.row_count()
 
     assert result == len(ids)
+
+
+def test_get_empty_mesages_ids(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+
+    for idx, id_ in enumerate(store.get_emtpy_message_ids(), start=1):
+        assert id_ in ids
+
+    assert idx == len(ids)
