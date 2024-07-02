@@ -80,12 +80,12 @@ class MessageStore:
         # sqlite3 does not support spreading values from one placeholder so
         # this will create as many as provided.
         ph = "?" + ",?" * (len(ids_) - 1)
-        sql = f"SELECT message_id FROM messages WHERE message_id NOT IN ({ph})"
+        sql = f"SELECT COUNT(message_id) FROM messages WHERE message_id IN ({ph})"
 
         with self._get_cursor() as cursor:
             results = cursor.execute(sql, ids_).fetchone()
 
-        return bool(results)
+        return len(ids_) != results["COUNT(message_id)"]
 
     def row_count(self, *, only_empty: bool = False) -> int:
         """
