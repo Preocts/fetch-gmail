@@ -84,3 +84,12 @@ def test_has_unique_ids_is_true(store: MessageStore) -> None:
     result = store.has_unique_ids({"134"})
 
     assert result is True
+
+
+def test_row_count(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+
+    result = store.row_count()
+
+    assert result == len(ids)
