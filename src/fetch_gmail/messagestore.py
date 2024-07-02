@@ -118,17 +118,18 @@ class MessageStore:
                     break
                 yield row["message_id"]
 
-    def csv_export(self, filename: str) -> None:
+    def csv_export(self, filename: str, *, allow_overwrite: bool = False) -> None:
         """
         Export MessageStore as a csv with headers.
 
         Args:
             filename: Full filename and path to save export to
+            allow_overwrite: When true an existing file will be overwritten
 
         Raises:
             FileExistsError: When filename already exists
         """
-        if os.path.exists(filename):
+        if not allow_overwrite and os.path.exists(filename):
             raise FileExistsError(f"'{filename}' already exists!")
 
         sql = "SELECT * FROM messages"
