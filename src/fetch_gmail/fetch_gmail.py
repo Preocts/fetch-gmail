@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import os.path
 import time
 
@@ -52,16 +53,16 @@ def build_message_list(
     store: MessageStore,
     *,
     delay: float = 0.25,
+    fullscan: bool = False,
 ) -> None:
     """
-    Builds a `message_list.json` file which contains data for all messages.
-
-    Note: Delete the `message_list.json` file to force a full refresh of all messges.
+    Builds a `messages.sqlite3` file which contains data for all messages.
 
     Args:
         creds: Authentication Credentials
         store: MessageStore object
         delay: Number of seconds to pause between request
+        fullscan: When false, message collection stops when no new message ids are discovered
     """
     service = build("gmail", "v1", credentials=creds)
 
@@ -82,7 +83,7 @@ def build_message_list(
 
         new_ids: set[str] = {message["id"] for message in results.get("messages", [])}
 
-        if not store.has_unique_ids(new_ids):
+        if not fullscan and not store.has_unique_ids(new_ids):
             print("All ids accounted for, assuming we have all ids and stopping.")
             break
 
@@ -149,13 +150,46 @@ def hydrate_message_list(
         time.sleep(delay)
 
 
+def parse_args(args: list[str] | None = None) -> argparse.Namespace:
+    """Handle CLI interaction."""
+    parser = argparse.ArgumentParser("fetch-gmail")
+
+    parser.add_argument(
+        "--export",
+        action="store_true",
+        help="Export data as csv",
+    )
+    parser.add_argument(
+        "--delay",
+        action="store",
+        default=0.25,
+        type=float,
+        metavar="",
+        help="Seconds delay between each request. Default: 0.25 seconds",
+    )
+    parser.add_argument(
+        "--fullscan",
+        action="store_true",
+        help="Force a full scan of all available messages. Default stops after no new messages are found.",
+    )
+
+    return parser.parse_args()
+
+
 def main() -> int:
     """Main entry point."""
+    args = parse_args()
+
     store = MessageStore()
     store.init_file()
+
+    if args.export:
+        store.csv_export("messages.csv")
+        return 0
+
     creds = authenticate()
-    build_message_list(creds, store)
-    hydrate_message_list(creds, store)
+    build_message_list(creds, store, delay=args.delay, fullscan=args.fullscan)
+    hydrate_message_list(creds, store, delay=args.delay)
 
     return 0
 
