@@ -44,3 +44,25 @@ def test_save_messages_ignores_constraint_violations(store: MessageStore) -> Non
     results = conn.execute(sql).fetchall()
 
     assert ids == [r[0] for r in results]
+
+
+def test_update(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    sql = "SELECT * from messages WHERE message_id=456;"
+    conn = sqlite3.connect(store.filename)
+    store.save_message_ids(ids)
+
+    store.update("456", "mockfrom", "mockto", "mocksub", "8675309")
+    results = conn.execute(sql).fetchone()
+
+    assert results == ("456", "mockfrom", "mockto", "mocksub", "8675309")
+
+
+def test_update_does_not_insert_if_id_not_exists(store: MessageStore) -> None:
+    sql = "SELECT * from messages WHERE message_id=456;"
+    conn = sqlite3.connect(store.filename)
+
+    store.update("456", "mockfrom", "mockto", "mocksub", "8675309")
+    results = conn.execute(sql).fetchone()
+
+    assert not results

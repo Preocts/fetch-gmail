@@ -43,6 +43,37 @@ class MessageStore:
         with self._get_cursor() as cursor:
             cursor.executemany(sql, ((id_,) for id_ in ids))
 
+    def update(
+        self,
+        message_id: str,
+        from_: str,
+        delivered_to: str,
+        subject: str,
+        timestamp: str,
+    ) -> None:
+        """
+        Update table row details by message_id.
+
+        Args:
+            message_id: Must exist in the table already
+            from_: Address message was delivered from (Header: From)
+            delivered_to: Address message was delivered to (Header: Delivered-To)
+            subject: Subject of the message (Header: Subject)
+            timestamp: Local timestamp of message (internalDate)
+        """
+        sql = """\
+            UPDATE messages
+            SET
+                [from]=?,
+                delivered_to=?,
+                subject=?,
+                timestamp=?
+            WHERE message_id=?;
+        """
+
+        with self._get_cursor() as cursor:
+            cursor.execute(sql, (from_, delivered_to, subject, timestamp, message_id))
+
     @contextlib.contextmanager
     def _get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
         """
