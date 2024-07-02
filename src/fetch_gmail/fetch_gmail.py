@@ -10,11 +10,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-# If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
-
 MESSAGE_LIST_FILE = "message_list.json"
-POLITENESS_SLEEP = 0.25
 
 
 def authenticate() -> Credentials:
@@ -51,7 +48,7 @@ def authenticate() -> Credentials:
     return creds
 
 
-def build_message_list(creds: Credentials) -> None:
+def build_message_list(creds: Credentials, *, delay: float = 0.25) -> None:
     """
     Builds a `message_list.json` file which contains data for all messages.
 
@@ -104,10 +101,15 @@ def build_message_list(creds: Credentials) -> None:
             print("All ids captured")
             break
 
-        time.sleep(POLITENESS_SLEEP)
+        time.sleep(delay)
 
 
-def hydrate_message_list(creds: Credentials, *, save_batch_size: int = 50) -> None:
+def hydrate_message_list(
+    creds: Credentials,
+    *,
+    save_batch_size: int = 50,
+    delay: float = 0.25,
+) -> None:
     """
     Get details of any message id that has not already been fetched.
 
@@ -163,7 +165,7 @@ def hydrate_message_list(creds: Credentials, *, save_batch_size: int = 50) -> No
                 json.dump(message_json, outfile)
             save_count = 0
 
-        time.sleep(POLITENESS_SLEEP)
+        time.sleep(delay)
 
     print("Writing messages to file...")
     with open(MESSAGE_LIST_FILE, "w", encoding="utf-8") as outfile:
