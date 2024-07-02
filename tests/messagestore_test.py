@@ -32,3 +32,15 @@ def test_init_file(store: MessageStore) -> None:
     columns = [d[0] for d in desc]
 
     assert columns == expected
+
+
+def test_save_messages_ignores_constraint_violations(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    sql = "SELECT * from messages;"
+    conn = sqlite3.connect(store.filename)
+
+    store.save_message_ids(ids)
+    results = conn.execute(sql).fetchall()
+    results = conn.execute(sql).fetchall()
+
+    assert ids == [r[0] for r in results]
