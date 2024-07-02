@@ -94,6 +94,18 @@ class MessageStore:
 
         return result["COUNT(*)"]
 
+    def get_emtpy_message_ids(self) -> Generator[str, None, None]:
+        """Generate list of message ids that need to be hydrated."""
+        sql = "SELECT message_id FROM messages WHERE timestamp=0;"
+
+        with self._get_cursor() as cursor:
+            results = cursor.execute(sql)
+            while "The road goes ever on and on":
+                row = results.fetchone()
+                if not row:
+                    break
+                yield row["message_id"]
+
     @contextlib.contextmanager
     def _get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
         """
