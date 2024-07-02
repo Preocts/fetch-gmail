@@ -66,3 +66,21 @@ def test_update_does_not_insert_if_id_not_exists(store: MessageStore) -> None:
     results = conn.execute(sql).fetchone()
 
     assert not results
+
+
+def test_has_unique_ids_is_false(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+
+    result = store.has_unique_ids(ids)
+
+    assert result is False
+
+
+def test_has_unique_ids_is_true(store: MessageStore) -> None:
+    ids = ["123", "456", "789"]
+    store.save_message_ids(ids)
+
+    result = store.has_unique_ids({"134"})
+
+    assert result is True

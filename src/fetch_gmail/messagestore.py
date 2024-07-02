@@ -74,6 +74,19 @@ class MessageStore:
         with self._get_cursor() as cursor:
             cursor.execute(sql, (from_, delivered_to, subject, timestamp, message_id))
 
+    def has_unique_ids(self, ids: Iterable[str]) -> bool:
+        """Returns true if any of the provided ids are unique to the table."""
+        ids_ = tuple(ids)
+        # sqlite3 does not support spreading values from one placeholder so
+        # this will create as many as provided.
+        ph = "?" + ",?" * (len(ids_) - 1)
+        sql = f"SELECT message_id FROM messages WHERE message_id NOT IN ({ph})"
+
+        with self._get_cursor() as cursor:
+            results = cursor.execute(sql, ids_).fetchone()
+
+        return bool(results)
+
     @contextlib.contextmanager
     def _get_cursor(self) -> Generator[sqlite3.Cursor, None, None]:
         """
