@@ -59,17 +59,17 @@ def test_update(store: MessageStore) -> None:
     conn = sqlite3.connect(store.filename)
     store.save_message_ids(ids)
 
-    store.update("456", "mockfrom", "mockto", "mocksub", "8675309")
+    store.update("456", "mockfrom", "mockto", "mocksub", "8675309", ["hi", "there"])
     results = conn.execute(sql).fetchone()
 
-    assert results == ("456", "mockfrom", "mockto", "mocksub", "8675309", "")
+    assert results == ("456", "mockfrom", "mockto", "mocksub", "8675309", "hi,there")
 
 
 def test_update_does_not_insert_if_id_not_exists(store: MessageStore) -> None:
     sql = "SELECT * from messages WHERE message_id=456;"
     conn = sqlite3.connect(store.filename)
 
-    store.update("456", "mockfrom", "mockto", "mocksub", "8675309")
+    store.update("456", "mockfrom", "mockto", "mocksub", "8675309", [])
     results = conn.execute(sql).fetchone()
 
     assert not results
@@ -105,7 +105,7 @@ def test_row_count(store: MessageStore) -> None:
 def test_row_count_only_empty(store: MessageStore) -> None:
     ids = ["123", "456", "789"]
     store.save_message_ids(ids)
-    store.update("123", "m", "m", "m", "1")
+    store.update("123", "m", "m", "m", "1", [])
 
     result = store.row_count(only_empty=True)
 
