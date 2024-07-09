@@ -147,7 +147,7 @@ def hydrate_message_list(
             delivered_to=message_data.get("Delivered-To", ""),
             subject=message_data.get("Subject", ""),
             timestamp=message_data.get("Timestamp", "0"),
-            label_ids=results["labelIds"],
+            label_ids=results.get("labelIds") or [],
         )
 
         time.sleep(delay)
