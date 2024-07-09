@@ -143,3 +143,47 @@ message_id,from,delivered_to,subject,timestamp,label_ids
 
     finally:
         os.remove(tempfile)
+
+
+@pytest.mark.parametrize(
+    "label_ids,expected",
+    (
+        (["aaa", "bbb", "ccc"], "aaa,bbb,ccc"),
+        (['"aaa', "bbb", "ccc"], '"""aaa",bbb,ccc'),
+        (['aaa"', "bbb", "ccc"], '"aaa""",bbb,ccc'),
+        (["aaa", "b,bb", "ccc"], 'aaa,"b,bb",ccc'),
+        (["a'a'a", "b,bb", 'c"c"c'], 'a\'a\'a,"b,bb","c""c""c"'),
+        (["", "", ""], ",,"),
+    ),
+)
+def test_lables_to_csv(
+    store: MessageStore,
+    label_ids: list[str],
+    expected: str,
+) -> None:
+
+    result = store._lables_to_csv(label_ids)
+
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "csv_string,expected",
+    (
+        ("aaa,bbb,ccc", ["aaa", "bbb", "ccc"]),
+        ('"""aaa",bbb,ccc', ['"aaa', "bbb", "ccc"]),
+        ('"aaa""",bbb,ccc', ['aaa"', "bbb", "ccc"]),
+        ('aaa,"b,bb",ccc', ["aaa", "b,bb", "ccc"]),
+        ('a\'a\'a,"b,bb",c""c""c', ["a'a'a", "b,bb", 'c"c"c']),
+        (",,", ["", "", ""]),
+    ),
+)
+def test_csv_to_lables(
+    store: MessageStore,
+    csv_string: str,
+    expected: tuple[str],
+) -> None:
+
+    result = store._csv_to_labels(csv_string)
+
+    assert result == expected

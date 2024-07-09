@@ -77,6 +77,56 @@ class MessageStore:
         with self._get_cursor() as cursor:
             cursor.execute(sql, (from_, delivered_to, subject, timestamp, message_id))
 
+    @staticmethod
+    def _lables_to_csv(label_ids: Iterable[str]) -> str:
+        """
+        Sanitize an interable of labels to comma seperated values.
+
+        Follows RFC 4180 - excludes new line handling
+
+        Args:
+            label_ids: An iterable of labels on the message
+        """
+        clean_labels = []
+        for label in label_ids:
+            label = label.replace('"', '""')
+            if "," in label or '"' in label:
+                label = f'"{label}"'
+            clean_labels.append(label)
+
+        return ",".join(clean_labels)
+
+    @staticmethod
+    def _csv_to_labels(csv_string: str) -> list[str]:
+        """
+        Convert a stored csv of label ids back to a tuple of label ids
+
+        Follows RFC 4180 - excludes new line handling
+
+        Args:
+            csv_string: A stored string of label ids from table
+        """
+        segments = []
+        in_quote = False
+        head = 0
+        for idx, char in enumerate(csv_string):
+            if char == '"':
+                in_quote = not in_quote
+
+            if not in_quote and char == ",":
+                segments.append(csv_string[head:idx])
+                head = idx + 1
+
+        segments.append(csv_string[head:])
+
+        for idx, segment in enumerate(segments):
+            if segment.startswith('"') and segment.endswith('"'):
+                segment = segment[1 : len(segment) - 1]
+            segment = segment.replace('""', '"')
+            segments[idx] = segment
+
+        return segments
+
     def has_unique_ids(self, ids: Iterable[str]) -> bool:
         """Returns true if any of the provided ids are unique to the table."""
         ids_ = tuple(ids)
