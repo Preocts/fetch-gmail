@@ -23,7 +23,14 @@ def store(tmpdir) -> Generator[MessageStore, None, None]:
 
 
 def test_init_file(store: MessageStore) -> None:
-    expected = ["message_id", "from", "delivered_to", "subject", "timestamp"]
+    expected = [
+        "message_id",
+        "from",
+        "delivered_to",
+        "subject",
+        "timestamp",
+        "label_ids",
+    ]
     sql = "SELECT * from messages;"
     conn = sqlite3.connect(store.filename)
     store.init_file()
@@ -55,7 +62,7 @@ def test_update(store: MessageStore) -> None:
     store.update("456", "mockfrom", "mockto", "mocksub", "8675309")
     results = conn.execute(sql).fetchone()
 
-    assert results == ("456", "mockfrom", "mockto", "mocksub", "8675309")
+    assert results == ("456", "mockfrom", "mockto", "mocksub", "8675309", "")
 
 
 def test_update_does_not_insert_if_id_not_exists(store: MessageStore) -> None:
@@ -120,10 +127,10 @@ def test_csv_export(store: MessageStore, tmpdir) -> None:
     store.save_message_ids(ids)
     tempfile = tmpdir.join("messagestore_test_export")
     expected = """\
-message_id,from,delivered_to,subject,timestamp
-123,,,,0
-456,,,,0
-789,,,,0
+message_id,from,delivered_to,subject,timestamp,label_ids
+123,,,,0,
+456,,,,0,
+789,,,,0,
 """
 
     try:

@@ -24,7 +24,8 @@ class MessageStore:
                 [from] TEXT DEFAULT '',
                 delivered_to TEXT DEFAULT '',
                 subject TEXT DEFAULT '',
-                timestamp TEXT DEFAULT '0'
+                timestamp TEXT DEFAULT '0',
+                label_ids TEXT DEFAULT ''
             );
         """
 
