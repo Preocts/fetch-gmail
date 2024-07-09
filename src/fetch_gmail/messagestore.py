@@ -53,6 +53,7 @@ class MessageStore:
         delivered_to: str,
         subject: str,
         timestamp: str,
+        label_ids: Iterable[str],
     ) -> None:
         """
         Update table row details by message_id.
@@ -63,6 +64,7 @@ class MessageStore:
             delivered_to: Address message was delivered to (Header: Delivered-To)
             subject: Subject of the message (Header: Subject)
             timestamp: Local timestamp of message (internalDate)
+            label_ids: An iterable of labels on the message
         """
         sql = """\
             UPDATE messages
@@ -70,12 +72,17 @@ class MessageStore:
                 [from]=?,
                 delivered_to=?,
                 subject=?,
-                timestamp=?
+                timestamp=?,
+                label_ids=?
             WHERE message_id=?;
         """
+        labels = self._lables_to_csv(label_ids)
 
         with self._get_cursor() as cursor:
-            cursor.execute(sql, (from_, delivered_to, subject, timestamp, message_id))
+            cursor.execute(
+                sql,
+                (from_, delivered_to, subject, timestamp, labels, message_id),
+            )
 
     @staticmethod
     def _lables_to_csv(label_ids: Iterable[str]) -> str:
