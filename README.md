@@ -14,7 +14,8 @@ database which, after full hyndration, contains the following per row:
 - Subject: Subject of the message
 - From: Sender of the message
 - Delivered-To: Reciever of the message
-- Timestamp: `internalDate` converted to seconds
+- Timestamp: `internalDate` - Timestamp of the message converted to seconds
+- Label Ids: `labelIds` - Comma seperated list of labels applied to message
 
 Collection of `messageId`s is designed to stop collection the moment a request
 returns ids that already exist in the `message_list.json` file. This saves time
